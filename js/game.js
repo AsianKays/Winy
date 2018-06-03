@@ -1,5 +1,5 @@
 //engine:
-var game = new Phaser.Game(800, 200, Phaser.AUTO, 'content', 
+var game = new Phaser.Game(800, 200, Phaser.AUTO, 'content',
 { preload: preload, create: create, update: update, render: render });
 
 
@@ -32,7 +32,9 @@ function preload()
     game.load.spritesheet('catcher', 'img/catcher.png', 46, 46);
     game.load.spritesheet('ground', 'img/ground.png', 630, 30);
     game.load.spritesheet('granny', 'img/granny.png', 32, 32);
+    game.load.spritesheet('disabled', 'img/disabled.png', 32, 32);
     game.load.spritesheet('wine', 'img/wine.png', 20, 20);
+    game.load.spritesheet('detergent', 'img/detergent.png', 20, 20);
     game.load.spritesheet('crow', 'img/crow.png', 24, 24);
     game.load.spritesheet('dog', 'img/dog.png', 24, 24);
     game.load.image('background', 'img/background.jpg', 1024, 762);
@@ -144,8 +146,8 @@ function generateRandomObject()
     for (let index = enemy_group.length; index < limit_enemy; index++) {
         if(index == 0 || spawn_interval_time < game.time.now)
         {
-            //le maximum = le nombre d'object + monstre (ici granny + wine + crow + dog) = 4
-            var randomObject = game.rnd.integerInRange(1, 4);
+            //le maximum = le nombre d'object + monstre (ici granny + wine + crow + dog) = 6
+            var randomObject = game.rnd.integerInRange(1, 6);
 
             switch(randomObject)
             {
@@ -174,6 +176,19 @@ function generateRandomObject()
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
                     item.body.gravity.y = 200;
+                    break;
+                case 5:
+                    var item = enemy_group.create(game.world.width, 150, 'disabled');
+                    game.physics.arcade.enable(item);
+                    item.enableBody = true;
+                    item.body.collideWorldBounds = true;
+                    item.body.gravity.y = 200;
+                    break;
+                case 6:
+                    var item = bonus_group.create(game.world.width, game.world.height / 2, 'detergent');
+                    game.physics.arcade.enable(item);
+                    item.enableBody = true;
+                    item.body.collideWorldBounds = true;
                     break;
             }
 
