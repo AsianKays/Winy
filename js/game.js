@@ -13,6 +13,8 @@ var timer;
 var player;
 var granny;
 
+var dinosaure;
+
 var jump_state = 0;
 
 var score;
@@ -36,8 +38,6 @@ function preload()
     game.load.spritesheet('detergent', 'img/detergent.png', 20, 20);
     game.load.spritesheet('crow', 'img/crow.png', 24, 24);
     game.load.spritesheet('dog', 'img/dog.png', 24, 24);
-
-    game.load.spritesheet('gameover', 'img/gameover.png', 199, 100);
 
     game.load.image('background', 'img/background.jpg', 1024, 762);
 }
@@ -175,6 +175,7 @@ function generateRandomObject()
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
+                    item.body.velocity.x = 0;
                     break;
                 case 4:
                     var item = enemy_group.create(game.world.width, 150, 'dog');
@@ -191,7 +192,9 @@ function generateRandomObject()
                     item.body.gravity.y = 200;
                     break;
                 case 6:
-                    var item = bonus_group.create(game.world.width, game.world.height / 2, 'detergent');
+                    var randomPosition = game.rnd.integerInRange(1, 2);
+                    var item = randomPositionGenerator(randomPosition, 'detergent');
+
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
