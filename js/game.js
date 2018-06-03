@@ -1,7 +1,6 @@
 //engine:
-var game = new Phaser.Game(800, 200, Phaser.AUTO, 'content',
+var game = new Phaser.Game(800, 200, Phaser.AUTO, 'content', 
 { preload: preload, create: create, update: update, render: render });
-
 
 //nos variables:
 var platforms;
@@ -13,12 +12,13 @@ var timer;
 var player;
 var granny;
 
-var dinosaure;
-
 var jump_state = 0;
 
-var score;
+var score = 0;
 var style = { font: "bold 20px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+var styleGameover = { font: "bold 3vw Press Start 2P", fill: "#000", boundsAlignH: "center", boundsAlignV: "middle" };
+var isAlive = true;
+var test = 5;
 
 var spawn_interval_time;
 
@@ -33,9 +33,7 @@ function preload()
     game.load.spritesheet('catcher', 'img/catcher.png', 46, 46);
     game.load.spritesheet('ground', 'img/ground.png', 630, 30);
     game.load.spritesheet('granny', 'img/granny.png', 32, 32);
-    game.load.spritesheet('disabled', 'img/disabled.png', 32, 32);
     game.load.spritesheet('wine', 'img/wine.png', 20, 20);
-    game.load.spritesheet('detergent', 'img/detergent.png', 20, 20);
     game.load.spritesheet('crow', 'img/crow.png', 24, 24);
     game.load.spritesheet('dog', 'img/dog.png', 24, 24);
 
@@ -59,8 +57,8 @@ function create()
         'background'
     );
 
-    //gametime
-    score = game.add.text(game.world.width / 2, 0, "0", style);
+    //score
+    scoreText = game.add.text(game.world.width / 2, 0, "0", style);
 
     //player
     player = game.add.sprite(25, game.world.height - 60, 'catcher');
@@ -68,7 +66,7 @@ function create()
     player.body.bounce.y = 0;
     player.body.gravity.y = 300;
     player.body.collideWorldBounds = true;
-    player.body.setSize(30, 46, 16, 0)
+    player.body.setSize(30, 46, 16, 0);
 
     enemy_group = game.add.group();
     enemy_group.enableBody = true;
@@ -102,42 +100,54 @@ function create()
 function update()
 {   
     //nos fonctions:
-    generateRandomObject();
-    objectAction();
+    if(isAlive == true)
+    {
+        generateRandomObject();
+        objectAction();
+    }
+    else
+    {
+        bonus_group.kill();
+        enemy_group.kill();
+        gameOver = game.add.text(0, 100, "GAME OVER", styleGameover);
+        gameOver.x = (game.world.width / 2)/2;
+    }
 
     //parallax:
     background_parallax.tilePosition.x -= (2 * speed_factor);
 
-    //responsive score:
-    score.x = game.world.width / 2;
+    //responsive design:
+    scoreText.x = game.world.width / 2;
     background_parallax.width = game.world.width;
 
     //nos collisions:
     game.physics.arcade.collide(player, platforms);
     game.physics.arcade.collide(enemy_group, platforms);
     game.physics.arcade.collide(bonus_group, platforms);
-    
-    game.physics.arcade.collide(player, enemy_group, test, null, this);
-    game.physics.arcade.collide(player, bonus_group, test, null, this);
+    game.physics.arcade.collide(player, enemy_group, ennemyCollide, null, this);
+    game.physics.arcade.collide(player, bonus_group, bonusCollide, null, this);
 }
 
 function render()
 {
-    game.debug.body(player);
+    // game.debug.body(player);
     enemy_group.forEach(function(item){
-        game.debug.body(item);
+        // game.debug.body(item);
+    });
+    bonus_group.forEach(function(item){
+        // game.debug.body(item);
     });
 }
 
 
-//déplacement du monstres
+//déplacement des monstres
 function monsterMove(entity, speed)
 {
     entity.position.x -= (2 * speed);
     if(entity.position.x <= 0)
     {
-        bonus_group.remove(entity);
         enemy_group.remove(entity);
+        bonus_group.remove(entity);
     }
 }
 
@@ -148,47 +158,39 @@ function generateRandomObject()
     for (let index = enemy_group.length; index < limit_enemy; index++) {
         if(index == 0 || spawn_interval_time < game.time.now)
         {
-            //le maximum = le nombre d'object + monstre (ici granny + wine + crow + dog) = 6
-            var randomObject = game.rnd.integerInRange(1, 6);
+            //le maximum = le nombre d'object + monstre (ici granny + wine + crow + dog) = 4
+            var randomObject = game.rnd.integerInRange(1, 4);
 
             switch(randomObject)
             {
                 case 1:
-                    var item = enemy_group.create(game.world.width, 150, 'granny');
+                    var item = enemy_group.create(game.world.width, 160, 'granny');
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
                     item.body.gravity.y = 200;
+                    item.body.setSize(25, 30, 0, 0);
                     break;
                 case 2:
-                    var randomPosition = game.rnd.integerInRange(1, 3);
-                    var item = randomPositionGenerator(randomPosition, 'wine');
-
+                    var item = bonus_group.create(game.world.width, game.world.height / 2, 'wine');
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
+                    item.body.setSize(15, 18, 0, 0);
                     break;
                 case 3:
-                    var randomPosition = game.rnd.integerInRange(1, 2);
-                    var item = randomPositionGenerator(randomPosition, 'crow');
-                    
+                    var item = enemy_group.create(game.world.width, game.world.height / 2, 'crow');
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
-                    item.body.velocity.x = 0;
+                    item.body.setSize(20, 20, 0, 0);
                     break;
                 case 4:
-                    var item = enemy_group.create(game.world.width, 150, 'dog');
+                    var item = enemy_group.create(game.world.width, 160, 'dog');
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
-                    item.body.gravity.y = 200;
-                    break;
-                case 5:
-                    var item = enemy_group.create(game.world.width, 150, 'disabled');
-                    game.physics.arcade.enable(item);
-                    item.enableBody = true;
-                    item.body.collideWorldBounds = true;
+                    item.body.setSize(25, 20, 0, 0);
                     item.body.gravity.y = 200;
                     break;
                 case 6:
@@ -199,29 +201,22 @@ function generateRandomObject()
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
                     break;
+                case 7:
+                    var item = bonus_group.create(game.world.width, game.world.height / 2, 'wine');
+                    game.physics.arcade.enable(item);
+                    item.enableBody = true;
+                    item.body.collideWorldBounds = true;
+                    item.body.setSize(15, 18, 0, 0);
+                    break;
             }
 
             //genere un temps random entre chaque spawn d'objet:
-            var number = game.rnd.integerInRange(200, 1800);
+            var number = game.rnd.integerInRange(1000, 1800);
             spawn_interval_time = (game.time.now + number);
         }
     }
 }
 
-//fonction qui permet de générer aléatoirement la position des enemie:
-function randomPositionGenerator(position, sprite_name)
-{
-    var item;
-    if(position == 1)
-        item = enemy_group.create(game.world.width, game.world.height / 3, sprite_name);
-    else if(position == 2)
-        item = enemy_group.create(game.world.width, game.world.height / 2, sprite_name);
-    else if(position == 3)
-        item = enemy_group.create(game.world.width, game.world.height - 50, sprite_name);
-    else
-        item = enemy_group.create(game.world.width, game.world.height - 50, sprite_name);
-    return item;
-}
 
 //fonction qui regroupe les action des object:
 function objectAction()
@@ -240,7 +235,7 @@ function objectAction()
 function playerMove()
 {
     var onGround = player.body.touching.down;
-    if(onGround)
+    if(onGround && isAlive)
     {
         player.body.velocity.y -= 160;
         jump_state = 1;
@@ -252,13 +247,29 @@ function playerMove()
     }     
 }
 
+function stop(){
+    game.paused = true;
+}
+
 //update de la vitesse de déplacement: (en fonction du temps passé voir le timer plus haut !)
 function updateSpeedFactor()
 {
     speed_factor += 0.20;
 }
 
-function test()
+function bonusCollide()
 {
-    console.log('test');
+    bonus_group.forEach(function(item){
+        if(game.physics.arcade.collide(player, item))
+            {  
+                item.kill();
+                score = score + 10;
+                scoreText.text = score;
+            }
+        });
+}
+
+function ennemyCollide()
+{
+    isAlive = false;
 }
