@@ -2,7 +2,6 @@
 var game = new Phaser.Game(800, 200, Phaser.AUTO, 'content', 
 { preload: preload, create: create, update: update, render: render });
 
-
 //nos variables:
 var platforms;
 var enemy_group;
@@ -14,8 +13,11 @@ var player;
 var granny;
 
 
-var score;
+var score = 0;
 var style = { font: "bold 20px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+var styleGameover = { font: "bold 3vw Press Start 2P", fill: "#000", boundsAlignH: "center", boundsAlignV: "middle" };
+var isAlive = true;
+var test = 5;
 
 var spawn_interval_time;
 
@@ -54,7 +56,7 @@ function create()
     );
 
     //gametime
-    score = game.add.text(game.world.width / 2, 0, "0", style);
+    scoreText = game.add.text(game.world.width / 2, 0, "0", style);
 
     //player
     player = game.add.sprite(25, game.world.height - 60, 'catcher');
@@ -62,7 +64,7 @@ function create()
     player.body.bounce.y = 0;
     player.body.gravity.y = 300;
     player.body.collideWorldBounds = true;
-    player.body.setSize(30, 46, 16, 0)
+    player.body.setSize(30, 46, 16, 0);
 
     enemy_group = game.add.group();
     enemy_group.enableBody = true;
@@ -96,41 +98,54 @@ function create()
 function update()
 {   
     //nos fonctions:
-    generateRandomObject();
-    objectAction();
+    if(isAlive == true)
+    {
+        generateRandomObject();
+        objectAction();
+    }
+    else
+    {
+        bonus_group.kill();
+        enemy_group.kill();
+        gameOver = game.add.text(0, 100, "GAME OVER", styleGameover);
+        gameOver.x = (game.world.width / 2)/2;
+    }
 
     //parallax:
     background_parallax.tilePosition.x -= (2 * speed_factor);
 
     //responsive score:
-    score.x = game.world.width / 2;
+    scoreText.x = game.world.width / 2;
     background_parallax.width = game.world.width;
 
     //nos collisions:
     game.physics.arcade.collide(player, platforms);
     game.physics.arcade.collide(enemy_group, platforms);
     game.physics.arcade.collide(bonus_group, platforms);
-    
-    game.physics.arcade.collide(player, enemy_group, test, null, this);
-    game.physics.arcade.collide(player, bonus_group, test, null, this);
+    game.physics.arcade.collide(player, enemy_group, ennemyCollide, null, this);
+    game.physics.arcade.collide(player, bonus_group, bonusCollide, null, this);
 }
 
 function render()
 {
-    game.debug.body(player);
+    // game.debug.body(player);
     enemy_group.forEach(function(item){
-        game.debug.body(item);
+        // game.debug.body(item);
+    });
+    bonus_group.forEach(function(item){
+        // game.debug.body(item);
     });
 }
 
 
-//déplacement du monstres
+//déplacement des monstres
 function monsterMove(entity, speed)
 {
     entity.position.x -= (2 * speed);
     if(entity.position.x <= 0)
     {
         enemy_group.remove(entity);
+        bonus_group.remove(entity);
     }
 }
 
@@ -147,29 +162,33 @@ function generateRandomObject()
             switch(randomObject)
             {
                 case 1:
-                    var item = enemy_group.create(game.world.width, 150, 'granny');
+                    var item = enemy_group.create(game.world.width, 160, 'granny');
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
                     item.body.gravity.y = 200;
+                    item.body.setSize(25, 30, 0, 0);
                     break;
                 case 2:
                     var item = bonus_group.create(game.world.width, game.world.height / 2, 'wine');
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
+                    item.body.setSize(15, 18, 0, 0);
                     break;
                 case 3:
                     var item = enemy_group.create(game.world.width, game.world.height / 2, 'crow');
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
+                    item.body.setSize(20, 20, 0, 0);
                     break;
                 case 4:
-                    var item = enemy_group.create(game.world.width, 150, 'dog');
+                    var item = enemy_group.create(game.world.width, 160, 'dog');
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
+                    item.body.setSize(25, 20, 0, 0);
                     item.body.gravity.y = 200;
                     break;
             }
@@ -200,7 +219,10 @@ function playerMove()
 {
     //if(player.body.touching.down)
     player.body.velocity.y -= 160;
-        
+}
+
+function stop(){
+    game.paused = true;
 }
 
 //update de la vitesse de déplacement: (en fonction du temps passé voir le timer plus haut !)
@@ -209,7 +231,20 @@ function updateSpeedFactor()
     speed_factor += 0.20;
 }
 
-function test()
+function bonusCollide()
 {
-    console.log('test');
+    bonus_group.forEach(function(item){
+        if(game.physics.arcade.collide(player, item))
+            {  
+                item.kill();
+                score = score + 10;
+                scoreText.text = score;
+            }
+        });
+}
+
+function ennemyCollide()
+{
+    isAlive = false;
+    // console.log("test");
 }
