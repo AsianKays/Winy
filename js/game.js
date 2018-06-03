@@ -47,7 +47,7 @@ function preload()
 function create()
 {
     //activer la physics:
-    game.physics.startSystem(Phaser.Physics.ARCADE);
+    game.physics.startSystem(Phaser.Physics.ARCADE);  
 
     //responsive design:
     game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
@@ -63,7 +63,6 @@ function create()
 
     //score
     scoreText = game.add.text(game.world.width / 2, 0, "0", style);
-
 
     gameOver = game.add.text(2000, 100, "GAME OVER", styleGameover);
     dinosaure = game.add.sprite(-40, 0, 'dinosaure');
@@ -141,7 +140,7 @@ function update()
     game.physics.arcade.collide(enemy_group, platforms);
     game.physics.arcade.collide(bonus_group, platforms);
     game.physics.arcade.collide(player, enemy_group, ennemyCollide, null, this);
-    game.physics.arcade.collide(player, bonus_group, bonusCollide, null, this);
+    game.physics.arcade.overlap(player, bonus_group, bonusCollide, null, this);
 }
 
 function render()
