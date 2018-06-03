@@ -13,7 +13,6 @@ var timer;
 var player;
 var granny;
 
-
 var jump_state = 0;
 
 var score;
@@ -35,6 +34,9 @@ function preload()
     game.load.spritesheet('wine', 'img/wine.png', 20, 20);
     game.load.spritesheet('crow', 'img/crow.png', 24, 24);
     game.load.spritesheet('dog', 'img/dog.png', 24, 24);
+
+    game.load.spritesheet('gameover', 'img/gameover.png', 199, 100);
+
     game.load.image('background', 'img/background.jpg', 1024, 762);
 }
 
@@ -78,7 +80,7 @@ function create()
     platforms = game.add.group();
     platforms.enableBody = true;
     var ground = platforms.create(0, 190, 'ground');
-    ground.scale.x = 3;
+    ground.scale.x = 5;
     ground.body.immovable = true;
 
     //fonction qui permet d'augmenter la rapidié en fonction du temps
@@ -157,13 +159,17 @@ function generateRandomObject()
                     item.body.gravity.y = 200;
                     break;
                 case 2:
-                    var item = bonus_group.create(game.world.width, game.world.height / 2, 'wine');
+                    var randomPosition = game.rnd.integerInRange(1, 3);
+                    var item = randomPositionGenerator(randomPosition, 'wine');
+
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
                     break;
                 case 3:
-                    var item = enemy_group.create(game.world.width, game.world.height / 2, 'crow');
+                    var randomPosition = game.rnd.integerInRange(1, 2);
+                    var item = randomPositionGenerator(randomPosition, 'crow');
+                    
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
@@ -184,6 +190,20 @@ function generateRandomObject()
     }
 }
 
+//fonction qui permet de générer aléatoirement la position des enemie:
+function randomPositionGenerator(position, sprite_name)
+{
+    var item;
+    if(position == 1)
+        item = enemy_group.create(game.world.width, game.world.height / 3, sprite_name);
+    else if(position == 2)
+        item = enemy_group.create(game.world.width, game.world.height / 2, sprite_name);
+    else if(position == 3)
+        item = enemy_group.create(game.world.width, game.world.height - 50, sprite_name);
+    else
+        item = enemy_group.create(game.world.width, game.world.height - 50, sprite_name);
+    return item;
+}
 
 //fonction qui regroupe les action des object:
 function objectAction()
