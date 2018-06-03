@@ -14,6 +14,8 @@ var player;
 var granny;
 
 
+var jump_state = 0;
+
 var score;
 var style = { font: "bold 20px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
 
@@ -130,6 +132,7 @@ function monsterMove(entity, speed)
     entity.position.x -= (2 * speed);
     if(entity.position.x <= 0)
     {
+        bonus_group.remove(entity);
         enemy_group.remove(entity);
     }
 }
@@ -198,9 +201,17 @@ function objectAction()
 //déplacement du joueurs:
 function playerMove()
 {
-    //if(player.body.touching.down)
-    player.body.velocity.y -= 160;
-        
+    var onGround = player.body.touching.down;
+    if(onGround)
+    {
+        player.body.velocity.y -= 160;
+        jump_state = 1;
+    }
+    else if(!onGround && jump_state == 1)
+    {
+        player.body.velocity.y -= 130;
+        jump_state = 0;
+    }     
 }
 
 //update de la vitesse de déplacement: (en fonction du temps passé voir le timer plus haut !)
