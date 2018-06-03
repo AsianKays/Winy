@@ -12,10 +12,12 @@ var timer;
 var player;
 var granny;
 
+var dinosaure;
+
 var jump_state = 0;
 
 var score = 0;
-var style = { font: "bold 20px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+var style = { font: "bold 20px Arial", fill: "#000", boundsAlignH: "center", boundsAlignV: "middle" };
 var styleGameover = { font: "bold 3vw Press Start 2P", fill: "#000", boundsAlignH: "center", boundsAlignV: "middle" };
 var isAlive = true;
 var test = 5;
@@ -30,12 +32,14 @@ var limit_enemy = 5;
 //load des sprites, décor
 function preload()
 {
-    game.load.spritesheet('catcher', 'img/catcher.png', 46, 46);
+    game.load.spritesheet('catcher', 'img/character.png', 42, 42);
     game.load.spritesheet('ground', 'img/ground.png', 630, 30);
     game.load.spritesheet('granny', 'img/granny.png', 32, 32);
-    game.load.spritesheet('wine', 'img/wine.png', 20, 20);
+    game.load.spritesheet('wine', 'img/wine.png', 25, 25);
+    game.load.spritesheet('detergent', 'img/detergent.png', 20, 20);
     game.load.spritesheet('crow', 'img/crow.png', 24, 24);
     game.load.spritesheet('dog', 'img/dog.png', 24, 24);
+    game.load.spritesheet('dinosaure', 'img/dinosaure.png', 42, 42);
 
     game.load.image('background', 'img/background.jpg', 1024, 762);
 }
@@ -60,13 +64,22 @@ function create()
     //score
     scoreText = game.add.text(game.world.width / 2, 0, "0", style);
 
+
+    gameOver = game.add.text(2000, 100, "GAME OVER", styleGameover);
+    dinosaure = game.add.sprite(-40, 0, 'dinosaure');
+    game.physics.arcade.enable(dinosaure);
+    dinosaure.body.bounce.y = 0;
+    dinosaure.body.gravity.y = 300;
+    dinosaure.animations.add('walk', [0, 1, 2], 6, false);
+
     //player
     player = game.add.sprite(25, game.world.height - 60, 'catcher');
     game.physics.arcade.enable(player);
     player.body.bounce.y = 0;
     player.body.gravity.y = 300;
-    player.body.collideWorldBounds = true;
-    player.body.setSize(30, 46, 16, 0);
+    player.body.setSize(32, 42, 0, 0);
+    player.animations.add('walk', [0, 1, 2], 4, true);
+    player.play('walk');
 
     enemy_group = game.add.group();
     enemy_group.enableBody = true;
@@ -100,7 +113,7 @@ function create()
 function update()
 {   
     //nos fonctions:
-    if(isAlive == true)
+    if(isAlive)
     {
         generateRandomObject();
         objectAction();
@@ -109,7 +122,9 @@ function update()
     {
         bonus_group.kill();
         enemy_group.kill();
-        gameOver = game.add.text(0, 100, "GAME OVER", styleGameover);
+        dinosaure.play('walk');
+        player.x += 5;
+        dinosaure.x += 4;
         gameOver.x = (game.world.width / 2)/2;
     }
 
@@ -122,6 +137,7 @@ function update()
 
     //nos collisions:
     game.physics.arcade.collide(player, platforms);
+    game.physics.arcade.collide(dinosaure, platforms);
     game.physics.arcade.collide(enemy_group, platforms);
     game.physics.arcade.collide(bonus_group, platforms);
     game.physics.arcade.collide(player, enemy_group, ennemyCollide, null, this);
@@ -159,7 +175,7 @@ function generateRandomObject()
         if(index == 0 || spawn_interval_time < game.time.now)
         {
             //le maximum = le nombre d'object + monstre (ici granny + wine + crow + dog) = 4
-            var randomObject = game.rnd.integerInRange(1, 4);
+            var randomObject = game.rnd.integerInRange(1, 7);
 
             switch(randomObject)
             {
@@ -172,14 +188,18 @@ function generateRandomObject()
                     item.body.setSize(25, 30, 0, 0);
                     break;
                 case 2:
-                    var item = bonus_group.create(game.world.width, game.world.height / 2, 'wine');
+                    var randomPosition = game.rnd.integerInRange(1, 3);
+                    var item = randomPositionGenerator(randomPosition, 'wine', bonus_group);
+
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
                     item.body.setSize(15, 18, 0, 0);
                     break;
                 case 3:
-                    var item = enemy_group.create(game.world.width, game.world.height / 2, 'crow');
+                    var randomPosition = game.rnd.integerInRange(1, 2);
+                    var item = randomPositionGenerator(randomPosition, 'crow', enemy_group);
+
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
@@ -195,14 +215,16 @@ function generateRandomObject()
                     break;
                 case 6:
                     var randomPosition = game.rnd.integerInRange(1, 2);
-                    var item = randomPositionGenerator(randomPosition, 'detergent');
+                    var item = randomPositionGenerator(randomPosition, 'detergent', enemy_group);
 
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
                     break;
                 case 7:
-                    var item = bonus_group.create(game.world.width, game.world.height / 2, 'wine');
+                    var randomPosition = game.rnd.integerInRange(1, 3);
+                    var item = randomPositionGenerator(randomPosition, 'wine', bonus_group);
+
                     game.physics.arcade.enable(item);
                     item.enableBody = true;
                     item.body.collideWorldBounds = true;
@@ -217,6 +239,20 @@ function generateRandomObject()
     }
 }
 
+function randomPositionGenerator(position, sprite_name, group)
+{
+    var item;
+    if(position == 1)
+        item = group.create(game.world.width, game.world.height / 3, sprite_name);
+    else if(position == 2)
+        item = group.create(game.world.width, game.world.height / 2, sprite_name);
+    else if(position == 3)
+        item = group.create(game.world.width, game.world.height - 50, sprite_name);
+    else
+        item = group.create(game.world.width, game.world.height - 50, sprite_name);
+
+    return item;
+}
 
 //fonction qui regroupe les action des object:
 function objectAction()
@@ -239,11 +275,14 @@ function playerMove()
     {
         player.body.velocity.y -= 160;
         jump_state = 1;
+        player.frame = 3;
+        //player.play('jump');
     }
     else if(!onGround && jump_state == 1)
     {
         player.body.velocity.y -= 130;
         jump_state = 0;
+        player.frame = 3;
     }     
 }
 
